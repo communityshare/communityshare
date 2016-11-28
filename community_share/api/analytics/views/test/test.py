@@ -6,21 +6,15 @@ from sqlalchemy.orm import sessionmaker
 from community_share import Base
 from community_share.api.analytics.views.record_view import record_view
 from community_share.models.analytics import PageView
+from community_share.test.in_memory_store import InMemoryStore
 
 
-class Store:
-    engine = create_engine('sqlite:///:memory:')
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-
-store = Store()
+store = InMemoryStore()
 
 
 class PageViewTest(unittest.TestCase):
     def setUp(self):
-        Base.metadata.drop_all(store.engine)
-        Base.metadata.create_all(store.engine)
+        store.reset()
 
     def test_rejects_short_next_path(self):
         self.assertFalse(record_view(1, '', '/some/valid/path', store=store))

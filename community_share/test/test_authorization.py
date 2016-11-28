@@ -1,21 +1,13 @@
 import unittest
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from community_share import Base
 from community_share.authorization import user_from_api_key, user_from_login
 from community_share.models.secret import Secret, create_secret
 from community_share.models.user import User
+from community_share.models.survey import Answer
+from community_share.test.in_memory_store import InMemoryStore
 
 
-class Store:
-    engine = create_engine('sqlite:///:memory:')
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-
-store = Store()
+store = InMemoryStore()
 
 active_user = {
     'id': 16,
@@ -59,8 +51,7 @@ class AuthorizationTest(unittest.TestCase):
     """
 
     def setUp(self):
-        Base.metadata.drop_all(store.engine)
-        Base.metadata.create_all(store.engine)
+        store.reset()
 
     def test_rejects_missing_api_key_secret(self):
         add_user(active_user)

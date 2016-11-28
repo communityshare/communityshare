@@ -26,7 +26,6 @@ class User(Base, Serializable):
     WRITEABLE_FIELDS = [
         'email',
         'name',
-        'is_administrator',
         'institution_associations',
         'zipcode',
         'website',
