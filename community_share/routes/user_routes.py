@@ -5,7 +5,7 @@ from flask import Response, request, make_response
 from community_share.app_exceptions import FileTypeNotImplemented, FileTypeNotPermitted
 from community_share import mail_actions, store
 from community_share.app_exceptions import BadRequest, NotFound, Unauthorized, InternalServerError
-from community_share.flask_helpers import needs_admin_auth, needs_auth, serialize
+from community_share.flask_helpers import needs_admin_auth, needs_auth, serialize, serialize_many, make_single_response, make_OK_response
 from community_share.models.user import User, UserReview
 from community_share.models.institution import Institution
 from community_share.authorization import get_requesting_user
@@ -76,9 +76,8 @@ def register_user_routes(app):
             error_message = mail_actions.request_password_reset(user)
             if error_message:
                 raise InternalServerError(error_message)
-            else:
-                response = base_routes.make_OK_response()
-        return response
+
+        return make_OK_response()
 
     @app.route('/api/requestapikey', methods=['GET'])
     @needs_auth()
@@ -110,9 +109,8 @@ def register_user_routes(app):
                 raise BadRequest(', '.join(error_messages))
             elif user is None:
                 raise BadRequest()
-            else:
-                response = base_routes.make_single_response(user, user)
-        return response
+
+        return make_single_response(user, user)
 
     @app.route('/api/requestconfirmemail', methods=['GET'])
     def request_confirm_email():
@@ -123,9 +121,8 @@ def register_user_routes(app):
             error_message = mail_actions.request_signup_email_confirmation(requester)
             if error_message:
                 raise InternalServerError(error_message)
-            else:
-                response = base_routes.make_OK_response()
-        return response
+
+        return make_OK_response()
 
     @app.route('/api/confirmemail', methods=['POST'])
     def confirm_email():
@@ -159,8 +156,7 @@ def register_user_routes(app):
         date_created_greaterthan = request.args.get('date_created.greaterthan', None)
         date_created_lessthan = request.args.get('date_created.lessthan', None)
         users = User.search(search_text, date_created_greaterthan, date_created_lessthan)
-        response = base_routes.make_many_response(requester, users)
-        return response
+        return {'data': serialize_many(requester, users)}
 
     @app.route('/api/user/<int:user_id>/picture', methods=['PUT', 'POST', 'PATCH'])
     @needs_auth()
@@ -204,7 +200,7 @@ def register_user_routes(app):
 
         logger.info('Saving image {!r}'.format(filename))
 
-        return base_routes.make_OK_response()
+        return make_OK_response()
 
     @app.route('/api/activate_email', methods=['POST'])
     def activate_email():

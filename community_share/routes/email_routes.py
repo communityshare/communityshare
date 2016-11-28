@@ -2,11 +2,11 @@ import logging
 
 from flask import request
 
+from community_share.flask_helpers import make_OK_response
 from community_share.models.conversation import Message
 from community_share.mail import Email, get_mailer
 from community_share.mail_actions import append_conversation_link
 from community_share import config, store
-from community_share.routes import base_routes
 
 logger = logging.getLogger(__name__)
 
@@ -53,5 +53,4 @@ def register_email_routes(app):
                 new_content=forward_new_content,
             )
             error_message = get_mailer().send(forward_email)
-        response = base_routes.make_OK_response()
-        return response
+        return make_OK_response()

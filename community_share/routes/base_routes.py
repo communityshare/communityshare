@@ -4,37 +4,9 @@ from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from community_share import store
 from community_share.app_exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 from community_share.authorization import get_requesting_user
+from community_share.flask_helpers import serialize, serialize_many, make_single_response
 from community_share.utils import is_integer
 from community_share.models.base import ValidationException
-
-
-def make_OK_response(message='OK'):
-    return {'message': message}
-
-
-def make_many_response(requester, items):
-    serialized = [item.serialize(requester) for item in items]
-    serialized = [s for s in serialized if s is not None]
-    return {'data': serialized}
-
-
-def make_single_response(requester, item, include_user=None):
-    '''
-    Sometimes we want to include the current user info in the response
-    since it might be changed by a request.
-    '''
-    if item is None:
-        raise NotFound()
-    else:
-        serialized = item.serialize(requester)
-        if serialized is None:
-            raise Forbidden()
-        else:
-            response_data = {'data': serialized}
-            if include_user is not None:
-                serialized_user = include_user.serialize(requester)
-                response_data['user'] = serialized_user
-            return response_data
 
 
 def make_blueprint(Item, resource_name):
@@ -60,7 +32,7 @@ def make_blueprint(Item, resource_name):
                             raise Forbidden()
                         else:
                             items = query.all()
-                            response = make_many_response(requester, items)
+                            response = {'data': serialize_many(requester, items)}
                     except ValueError as e:
                         raise BadRequest(', '.join(e.args))
                 else:
@@ -69,7 +41,7 @@ def make_blueprint(Item, resource_name):
                 try:
                     query = Item.args_to_query(request.args, requester)
                     items = query.all()
-                    response = make_many_response(requester, items)
+                    response = {'data': serialize_many(requester, items)}
                 except ValueError as e:
                     raise BadRequest(', '.join(e.args))
         return response
@@ -117,7 +89,13 @@ def make_blueprint(Item, resource_name):
                 store.session.commit()
                 # and refresh again to update relationships
                 refreshed_item = store.session.query(Item).filter_by(id=item.id).first()
-                response = make_single_response(requester, refreshed_item, include_user=requester)
+
+                if refreshed_item is None:
+                    raise BadRequest()
+
+                response = make_single_response(requester, refreshed_item)
+                response['user'] = serialize(requester, requester)
+
             except ValidationException as e:
                 raise BadRequest(str(e))
             except (IntegrityError, InvalidRequestError) as e:

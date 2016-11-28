@@ -1,9 +1,12 @@
 from functools import wraps
 
 from flask import request
+from typing import Dict
 
-from community_share.app_exceptions import Unauthorized
+from community_share.app_exceptions import Unauthorized, Forbidden
 from community_share.authorization import get_requesting_user
+from community_share.models.user import User
+from community_share.models.base import Serializable
 
 
 def api_path(path, query_args={}):
@@ -64,3 +67,13 @@ def serialize_many(user, raw_items, fields=None):
 
     return [item for item in items if item is not None]
 
+
+def make_OK_response(message='OK'):
+    return {'message': message}
+
+
+def make_single_response(requester: User, item: Serializable) -> Dict[str, Dict]:
+    serialized = serialize(requester, item)
+    if serialized is None:
+        raise Forbidden()
+    return {'data': serialized}
