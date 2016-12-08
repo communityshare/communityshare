@@ -1,7 +1,7 @@
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
-from community_share import store
+from community_share import with_store
 from community_share.app_exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 from community_share.authorization import get_requesting_user
 from community_share.flask_helpers import serialize, serialize_many, make_single_response
@@ -51,7 +51,8 @@ def make_blueprint(Item, resource_name):
         endpoint='get_{}'.format(resource_name),
         methods=['GET'],
     )
-    def get_item(id):
+    @with_store
+    def get_item(id, store=None):
         requester = get_requesting_user()
         if requester is None:
             raise Unauthorized()
@@ -70,7 +71,8 @@ def make_blueprint(Item, resource_name):
         endpoint='add_{}'.format(resource_name),
         methods=['POST'],
     )
-    def add_item():
+    @with_store
+    def add_item(store=None):
         requester = get_requesting_user()
         data = request.json
         if not Item.has_add_rights(data, requester):
@@ -111,7 +113,8 @@ def make_blueprint(Item, resource_name):
         endpoint='edit_{}'.format(resource_name),
         methods=['PATCH', 'PUT'],
     )
-    def edit_item(id):
+    @with_store
+    def edit_item(id, store=None):
         requester = get_requesting_user()
         if requester is None:
             raise Unauthorized()
@@ -149,7 +152,8 @@ def make_blueprint(Item, resource_name):
         endpoint='delete_{}'.format(resource_name),
         methods=['DELETE'],
     )
-    def delete_item(id):
+    @with_store
+    def delete_item(id, store=None):
         requester = get_requesting_user()
         if requester is None:
             raise Unauthorized()
