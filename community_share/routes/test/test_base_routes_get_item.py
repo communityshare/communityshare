@@ -8,7 +8,7 @@ from community_share.models.base import Serializable
 from community_share.models.user import User
 from community_share.models.survey import Answer
 from community_share import Base
-from community_share.app_exceptions import Unauthorized, BadRequest, NotFound, Forbidden
+from community_share.app_exceptions import Unauthorized, NotFound, Forbidden
 
 
 store = InMemoryStore()
@@ -42,30 +42,25 @@ class GetItemTest(unittest.TestCase):
 
     def test_clear(self):
         add_thing(thing)
-        response = get_item(Thing, '1', store=store, requester=user)
+        response = get_item(Thing, 1, store=store, requester=user)
         self.assertEqual(response['data'], thing)
 
     def test_unauthorized_if_not_authenticated(self):
         add_thing(thing)
         with self.assertRaises(Unauthorized):
-            get_item(Thing, '1', store=store, requester=None)
-
-    def test_bad_request_if_id_malformed(self):
-        add_thing(thing)
-        with self.assertRaises(BadRequest):
-            get_item(Thing, 'a', store=store, requester=user)
+            get_item(Thing, 1, store=store, requester=None)
 
     def test_not_found_if_item_missing(self):
         # This time we didn't add_thing(thing)
         with self.assertRaises(NotFound):
-            get_item(Thing, '1', store=store, requester=user)
+            get_item(Thing, 1, store=store, requester=user)
 
     def test_not_found_if_item_not_active(self):
         add_thing(inactive_thing)
         with self.assertRaises(NotFound):
-            get_item(Thing, '1', store=store, requester=user)
+            get_item(Thing, 1, store=store, requester=user)
 
     def test_forbidden_if_user_cant_deserialize(self):
         add_thing(secret_thing)
         with self.assertRaises(Forbidden):
-            get_item(Thing, '1', store=store, requester=user)
+            get_item(Thing, 1, store=store, requester=user)

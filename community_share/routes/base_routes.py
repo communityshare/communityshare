@@ -1,31 +1,35 @@
+from typing import Dict
+
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
-from community_share import with_store
+from community_share import with_store, Base, Store
 from community_share.app_exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 from community_share.authorization import get_requesting_user
 from community_share.flask_helpers import serialize, serialize_many, make_single_response, needs_auth
 from community_share.utils import is_integer
 from community_share.models.base import ValidationException
+from community_share.models.user import User
 
 
 @needs_auth()
 @with_store
-def get_item(Item, id, requester=None, store=None):
-    if requester is None:
-        raise Unauthorized()
-    elif not is_integer(id):
-        raise BadRequest()
-    else:
-        item = store.session.query(Item).filter_by(id=id, active=True).first()
-        if item is None:
-            raise NotFound()
-        else:
-            response = make_single_response(requester, item)
-    return response
+def get_item(
+    Item: Base,
+    id: int,
+    requester: User=None,
+    store: Store=None,
+) -> Dict[str, Dict]:
+
+    item = store.session.query(Item).filter_by(id=id, active=True).first()
+
+    if item is None:
+        raise NotFound()
+
+    return make_single_response(requester, item)
 
 
-def make_blueprint(Item, resource_name):
+def make_blueprint(Item: Base, resource_name: str) -> Blueprint:
 
     api = Blueprint(resource_name, __name__)
 
@@ -63,11 +67,11 @@ def make_blueprint(Item, resource_name):
         return response
 
     @api.route(
-        '/api/{0}/<id>'.format(resource_name),
+        '/api/{0}/<int:id>'.format(resource_name),
         endpoint='get_{}'.format(resource_name),
         methods=['GET'],
     )
-    def get_blueprint_item(id):
+    def get_blueprint_item(id: int) -> Dict[str, Dict]:
         return get_item(Item, id)
 
     @api.route(
