@@ -28,7 +28,19 @@ def needs_auth(auth_level='user'):
     def needs_auth_decorator(f):
         @wraps(f)
         def auth_check(*args, **kwargs):
-            user = kwargs.pop('requester', get_requesting_user())
+
+            # Don't use
+            #
+            #   user = kwargs.pop('requester', get_requesting_user())
+            #
+            # here because the eager execution of get_requesting_user
+            # will force us to be in flask app context during any test
+            # that uses a @needs_auth() method, and that makes unit
+            # tests harder.
+            if 'requester' in kwargs:
+                user = kwargs.pop('requester')
+            else:
+                user = get_requesting_user()
 
             if user is None:
                 raise Unauthorized()
