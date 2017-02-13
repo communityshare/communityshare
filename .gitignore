@@ -17,6 +17,8 @@ instance/
 
 static/build
 manifest.json
+env
+communitysharelogs
 
 \#*
 \.\#*
