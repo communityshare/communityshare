@@ -57,9 +57,9 @@ module.directive(
 						'Other',
 					];
 					$scope.roles = [
-						'Classroom teacher',
+						'Classroom Teacher',
 						'Curriculum Coordinator',
-						'Administator',
+						'Administrator',
 						'Parent',
 						'Other',
 					];
