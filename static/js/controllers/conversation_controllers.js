@@ -118,8 +118,8 @@ module.controller(
 		$scope.messageHighlightClasses[ Session.activeUser.id ] = 'highlight1';
 		$scope.messageHighlightClasses[ $scope.otherUser.id ] = 'highlight2';
 		$scope.newMessage = makeNewMessage();
-		refreshShares();
-		$timeout( refreshConversation, 5000 );
+		// refreshShares();
+		// $timeout( refreshConversation, 5000 );
 		$scope.createNewShare = function() {
 			var share = conversation.makeShare();
 			$scope.editShare( share );
